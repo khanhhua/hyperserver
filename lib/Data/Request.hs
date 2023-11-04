@@ -1,13 +1,15 @@
-module Data.Request
-  ( Request(..)
-  ) where
+module Data.Request (
+  Request (..),
+) where
 
 import Data.ByteString (ByteString)
 import Data.Http (HttpMethod)
+import Data.Url (Path)
 
 data Request = Request
   { method :: HttpMethod
+  , path :: Path
+  , params :: [(String, String)]
   , headers :: [(String, String)]
   , body :: Maybe ByteString
   }
-
