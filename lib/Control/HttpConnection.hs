@@ -1,10 +1,15 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Control.HttpConnection (serve) where
 
 import Control.Concurrent (forkFinally)
 import qualified Control.Exception as E
-import Control.Monad (forever, unless, void)
+import Control.Monad (forever, void)
+import qualified Data.ByteString as B
 import Data.ByteString.Builder (toLazyByteString)
+import Data.ByteString.Char8 (unpack)
 import Data.ByteString.Lazy (toStrict)
+import qualified Data.ByteString.Lazy as L
 import Data.Http (HttpMethod (GET))
 import Data.Request (Request (..))
 import Data.Response (Response, toBuilder)
@@ -29,6 +34,7 @@ import Network.Socket (
   withSocketsDo,
  )
 import Network.Socket.ByteString (sendAll)
+import qualified Network.Socket.ByteString.Lazy as N (getContents)
 
 {-
  data HttpConnection = HttpConnection
@@ -74,4 +80,13 @@ serve mhost port action = withSocketsDo $ do
 -- newHttpConnection = HttpConnection
 
 newRequest :: Socket -> IO Request
-newRequest rawSocket = pure $ Request GET [] Nothing
+newRequest rawSocket = do
+  content <- parts <$> N.getContents rawSocket
+  print . head $ content
+  let (method, path, _) = httpPrologue . L.toStrict $ head content
+  pure $ Request method path [] [] Nothing
+ where
+  parts xs = L.dropWhile (== 10) <$> L.split 13 xs
+  httpPrologue line =
+    let (method : path : version : _) :: [String] = unpack <$> B.split 32 line
+     in (read method :: HttpMethod, path, version)
