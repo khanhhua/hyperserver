@@ -2,7 +2,6 @@ module Data.Request (
   Request (..),
 ) where
 
-import Data.ByteString (ByteString)
 import Data.Http (HttpMethod)
 import Data.Url (Path)
 
@@ -11,5 +10,5 @@ data Request = Request
   , path :: Path
   , params :: [(String, String)]
   , headers :: [(String, String)]
-  , body :: Maybe ByteString
+  , body :: Maybe String
   }

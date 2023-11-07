@@ -1,6 +1,9 @@
 module Data.Http (
   HttpMethod (..),
+  Version,
 ) where
+
+type Version = String
 
 data HttpMethod
   = POST

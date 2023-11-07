@@ -5,12 +5,10 @@ module Control.HttpConnection (serve) where
 import Control.Concurrent (forkFinally)
 import qualified Control.Exception as E
 import Control.Monad (forever, void)
-import qualified Data.ByteString as B
 import Data.ByteString.Builder (toLazyByteString)
-import Data.ByteString.Char8 (unpack)
+import qualified Data.ByteString.Char8 as BS8
 import Data.ByteString.Lazy (toStrict)
 import qualified Data.ByteString.Lazy as L
-import Data.Http (HttpMethod)
 import Data.Request (Request (..))
 import Data.Response (Response, toBuilder)
 import Network.Socket (
@@ -34,7 +32,9 @@ import Network.Socket (
   withSocketsDo,
  )
 import Network.Socket.ByteString (sendAll)
-import qualified Network.Socket.ByteString.Lazy as N (getContents)
+import qualified Network.Socket.ByteString.Lazy as N (recv)
+import Parsers.HttpParser (httpHeaderParser)
+import Parsers.Parser (Parser (runParser))
 
 {-
  data HttpConnection = HttpConnection
@@ -67,30 +67,28 @@ serve mhost port action = withSocketsDo $ do
     response <- action request
     sendAll socket $ (toStrict . toLazyByteString . toBuilder) response
 
-  loop sock = 
+  loop sock =
     forever
-    $ E.bracketOnError (accept sock) (close . fst)
-    $ \(conn, _peer) ->
-      void
-        $
-        -- 'forkFinally' alone is unlikely to fail thus leaking @conn@,
-        -- but 'E.bracketOnError' above will be necessary if some
-        -- non-atomic setups (e.g. spawning a subprocess to handle
-        -- @conn@) before proper cleanup of @conn@ is your case
-        forkFinally (server conn) (const $ gracefulClose conn 5000)
+      $ E.bracketOnError (accept sock) (close . fst)
+      $ \(conn, _peer) ->
+        void
+          $
+          -- 'forkFinally' alone is unlikely to fail thus leaking @conn@,
+          -- but 'E.bracketOnError' above will be necessary if some
+          -- non-atomic setups (e.g. spawning a subprocess to handle
+          -- @conn@) before proper cleanup of @conn@ is your case
+          forkFinally (server conn) (const $ gracefulClose conn 5000)
 
 -- newHttpConnection :: Socket -> HttpConnection
 -- newHttpConnection = HttpConnection
 
 newRequest :: Socket -> IO Request
 newRequest rawSocket = do
-  content <- parts <$> N.getContents rawSocket
-  print . head $ content
-  let (method, path, _) = httpPrologue . L.toStrict $ head content
-  pure $ Request method path [] [] Nothing
- where
-  parts xs = L.dropWhile (== 10) <$> L.split 13 xs
-  httpPrologue line =
-    case unpack <$> B.split 32 line of
-      (method : path : version) -> (read method :: HttpMethod, path, version)
-      _ -> error "Bad Request"
+  lazyBs <- L.toStrict <$> N.recv rawSocket 1024
+  let content = BS8.unpack lazyBs
+
+  case runParser httpHeaderParser content of
+    (Just ((method, path, _version), headers), rest) -> do
+      return $ Request method path [] headers (Just rest)
+    (Nothing, _) ->
+      error "Bad Request"

@@ -1,6 +1,7 @@
 module Data.Response (
   Response (..),
   plainText,
+  htmlText,
   toBuilder,
 ) where
 
@@ -27,4 +28,12 @@ plainText httpStatus content =
     { status = httpStatus
     , headers = [("Content-Type", "text/plain")]
     , body = fromString content
+    }
+
+htmlText :: Int -> ByteString -> Response
+htmlText httpStatus content =
+  Response
+    { status = httpStatus
+    , headers = [("Content-Type", "text/html")]
+    , body = content
     }
