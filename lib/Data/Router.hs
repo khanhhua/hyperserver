@@ -1,9 +1,9 @@
-module Data.Router (Router (..), route) where
+module Data.Router (Routing, get, post, delete) where
 
-import Control.HttpApplet (Applet)
-import Data.Http (HttpMethod (DELETE))
-import Data.Url (Path)
+import Data.Http (HttpMethod (DELETE, GET, POST))
 import Parsers.UrlParser (UrlParser)
+
+import Control.Class (Applet)
 
 type Routing = (HttpMethod, UrlParser, Applet)
 

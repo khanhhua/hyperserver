@@ -61,6 +61,7 @@ library htmx-monad
       , Data.Response
       , Parsers.Parser
       , Parsers.UrlParser
+      , Control.Class
       , Control.HttpConnection
       , Control.HttpApplet
 

@@ -10,7 +10,7 @@ import Data.ByteString.Builder (toLazyByteString)
 import Data.ByteString.Char8 (unpack)
 import Data.ByteString.Lazy (toStrict)
 import qualified Data.ByteString.Lazy as L
-import Data.Http (HttpMethod (GET))
+import Data.Http (HttpMethod)
 import Data.Request (Request (..))
 import Data.Response (Response, toBuilder)
 import Network.Socket (
@@ -18,7 +18,7 @@ import Network.Socket (
   AddrInfoFlag (AI_PASSIVE),
   HostName,
   Socket,
-  SocketOption (ReuseAddr),
+  SocketOption (ReuseAddr, ReusePort),
   SocketType (Stream),
   accept,
   bind,
@@ -44,6 +44,7 @@ import qualified Network.Socket.ByteString.Lazy as N (getContents)
 serve :: Maybe HostName -> String -> (Request -> IO Response) -> IO ()
 serve mhost port action = withSocketsDo $ do
   addr <- resolve
+  putStrLn "Server is listening..."
   E.bracket (open addr) close loop
  where
   resolve = do
@@ -55,9 +56,10 @@ serve mhost port action = withSocketsDo $ do
     head <$> getAddrInfo (Just hints) mhost (Just port)
   open addr = E.bracketOnError (openSocket addr) close $ \sock -> do
     setSocketOption sock ReuseAddr 1
+    setSocketOption sock ReusePort 1
     withFdSocket sock setCloseOnExecIfNeeded
     bind sock $ addrAddress addr
-    listen sock 1024
+    listen sock 256
     return sock
 
   server socket = do
@@ -65,7 +67,8 @@ serve mhost port action = withSocketsDo $ do
     response <- action request
     sendAll socket $ (toStrict . toLazyByteString . toBuilder) response
 
-  loop sock = forever
+  loop sock = 
+    forever
     $ E.bracketOnError (accept sock) (close . fst)
     $ \(conn, _peer) ->
       void
@@ -88,5 +91,6 @@ newRequest rawSocket = do
  where
   parts xs = L.dropWhile (== 10) <$> L.split 13 xs
   httpPrologue line =
-    let (method : path : version : _) :: [String] = unpack <$> B.split 32 line
-     in (read method :: HttpMethod, path, version)
+    case unpack <$> B.split 32 line of
+      (method : path : version) -> (read method :: HttpMethod, path, version)
+      _ -> error "Bad Request"

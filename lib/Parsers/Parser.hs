@@ -5,7 +5,6 @@ module Parsers.Parser where
 
 import Control.Applicative (Alternative (empty, (<|>)))
 import Control.Monad (void)
-import Data.Bits (Bits (xor))
 import Data.Char (isDigit)
 import Data.Maybe (isJust)
 
