@@ -2,4 +2,4 @@
 
 ## Preview
 
-<video width="630" height="300" src="Hyperserver-video.mp4"></video>
+[![Preview](preview.gif)](Hyperserver-video.mp4)
