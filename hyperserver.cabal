@@ -45,10 +45,24 @@ executable hyperserver
     -- other-extensions:
     build-depends:
         base ^>=4.16.4.0
+      , http-server
       , htmx-monad
     hs-source-dirs:   app
 
 library htmx-monad
+    import: shared-properties
+    hs-source-dirs:   htmx-lib
+    exposed-modules:  
+        Data.Syntax
+      , Data.Tags
+      , Data.Builder
+      , Template.Class
+      , Template.Elements
+    build-depends:
+        http-server
+    default-language: Haskell2010
+
+library http-server
     import: shared-properties
     hs-source-dirs:   lib
     build-depends:
@@ -61,6 +75,8 @@ library htmx-monad
       , Data.Response
       , Parsers.Parser
       , Parsers.UrlParser
+      , Parsers.FormDataParser
+      , Parsers.HttpParser
       , Control.Class
       , Control.HttpConnection
       , Control.HttpApplet
