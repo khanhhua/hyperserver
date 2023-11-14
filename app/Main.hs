@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Use <&>" #-}
 module Main where
 
@@ -16,13 +17,13 @@ import Parsers.UrlParser (root, s, top, var, (//))
 import Data.Builder (buildHtmx)
 import Data.ByteString.Builder (toLazyByteString)
 import Data.ByteString.Lazy (toStrict)
-import Data.Request (body, Request (params))
+import Data.Maybe (fromMaybe)
+import Data.Request (Request (params), body)
 import qualified Data.Syntax as H
 import qualified Data.Tags as H
 import Parsers.FormDataParser (formData)
 import Parsers.Parser (parse)
 import qualified Template.Elements as T
-import Data.Maybe (fromMaybe)
 
 main :: IO ()
 main = serve Nothing "8080" $ runApplet $ dispatcher routingTable
@@ -50,7 +51,7 @@ pageN = do
 todoList :: Applet
 todoList = do
   mbody <- asks body
-  let mform = parse formData =<< mbody
+  let mform = parse formData mbody
       mtodoItems = getMulti "todoItem" <$> mform
       items = fromMaybe [] mtodoItems
       html = runReader (tmplPage [tmplForm items]) []
@@ -58,7 +59,7 @@ todoList = do
   pure $ htmlText 200 content
  where
   getMulti key =
-    reverse . foldl (\acc (name, value) -> if name == key then value : acc else acc ) []
+    reverse . foldl (\acc (name, value) -> if name == key then value : acc else acc) []
 
   tmplPage body =
     T.tag
@@ -85,7 +86,7 @@ todoList = do
       , H.tag
           "ul"
           []
-          [H.tag "li" [] [ H.tag "input" [("type", "text"), ("name", "todoItem"), ("value", item)] [] ] | item <- items]
+          [H.tag "li" [] [H.tag "input" [("type", "text"), ("name", "todoItem"), ("value", item)] []] | item <- items]
       , H.tag "input" [("type", "text"), ("name", "todoItem")] []
       , H.scTag
           "input"

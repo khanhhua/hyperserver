@@ -5,10 +5,15 @@ module Parsers.Parser where
 
 import Control.Applicative (Alternative (empty, (<|>)))
 import Control.Monad (void)
-import Data.Char (isDigit)
-import Data.Maybe (isJust)
 
-newtype Parser a = Parser {runParser :: String -> (Maybe a, String)}
+import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString.Lazy.Char8 as LC8
+
+import Data.Char (chr, isDigit)
+import Data.Maybe (isJust)
+import Data.Word (Word8)
+
+newtype Parser a = Parser {runParser :: L.ByteString -> (Maybe a, L.ByteString)}
 
 instance Functor Parser where
   fmap f (Parser p) =
@@ -69,24 +74,29 @@ instance Alternative Parser where
                         else (Nothing, xs)
       )
 
-parsePrefix :: Parser a -> String -> Maybe a
+parsePrefix :: Parser a -> L.ByteString -> Maybe a
 parsePrefix p = fst . runParser p
 
-parse :: Parser a -> String -> Maybe a
+parse :: Parser a -> L.ByteString -> Maybe a
 parse p s =
-  case runParser p s of
-    (x, []) -> x
-    _ -> Nothing
+  let (x, xs) = runParser p s
+   in if L.null xs
+        then x
+        else Nothing
 
 predicate :: (Char -> Bool) -> Parser Char
 predicate test =
   Parser
-    ( \s ->
-        case s of
-          [x] -> if test x then (Just x, "") else (Nothing, s)
-          (x : xs) -> if test x then (Just x, xs) else (Nothing, s)
-          _ -> (Nothing, "")
+    ( \bs ->
+        let mUncons = LC8.uncons bs
+         in maybe (Nothing, L.empty) process mUncons
     )
+ where
+  process :: (Char, L.ByteString) -> (Maybe Char, L.ByteString)
+  process (c, rest) =
+    if test c
+      then (Just c, rest)
+      else (Nothing, L.empty)
 
 letter :: Parser Char
 letter = predicate $ const True
