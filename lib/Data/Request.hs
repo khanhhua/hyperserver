@@ -2,6 +2,7 @@ module Data.Request (
   Request (..),
 ) where
 
+import qualified Data.ByteString.Lazy as L
 import Data.Http (HttpMethod)
 import Data.Url (Path)
 
@@ -10,5 +11,5 @@ data Request = Request
   , path :: Path
   , params :: [(String, String)]
   , headers :: [(String, String)]
-  , body :: Maybe String
+  , body :: L.ByteString
   }

@@ -5,6 +5,7 @@ module Control.HttpConnection (serve) where
 import Control.Concurrent (forkFinally)
 import qualified Control.Exception as E
 import Control.Monad (forever, void)
+import Control.Monad.IO.Class (liftIO)
 import Data.ByteString.Builder (toLazyByteString)
 import qualified Data.ByteString.Char8 as BS8
 import Data.ByteString.Lazy (toStrict)
@@ -64,6 +65,7 @@ serve mhost port action = withSocketsDo $ do
 
   server socket = do
     request <- newRequest socket
+    putStrLn $ show (method request) <> " " <> path request
     response <- action request
     sendAll socket $ (toStrict . toLazyByteString . toBuilder) response
 
@@ -84,11 +86,10 @@ serve mhost port action = withSocketsDo $ do
 
 newRequest :: Socket -> IO Request
 newRequest rawSocket = do
-  lazyBs <- L.toStrict <$> N.recv rawSocket 1024
-  let content = BS8.unpack lazyBs
-
-  case runParser httpHeaderParser content of
+  lazyBs <- N.recv rawSocket 1024
+  case runParser httpHeaderParser lazyBs of
     (Just ((method, path, _version), headers), rest) -> do
-      return $ Request method path [] headers (Just rest)
-    (Nothing, _) ->
+      return $ Request method path [] headers rest
+    (Nothing, _) -> do
+      liftIO $ putStrLn "Bad Request"
       error "Bad Request"

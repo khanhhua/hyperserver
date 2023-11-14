@@ -1,5 +1,7 @@
 module Control.HttpApplet where
 
+import qualified Data.ByteString.Lazy as L
+
 import Control.Monad.IO.Class (liftIO)
 import Data.Request
 import Data.Response
@@ -8,6 +10,7 @@ import Parsers.Parser (parse)
 import Control.Class (Applet)
 import Control.Monad.Trans.Reader (ReaderT (runReaderT), ask, asks, local)
 import Data.Router (Routing)
+import qualified Data.String as B
 
 defaultApplet :: Applet
 defaultApplet = do
@@ -24,7 +27,7 @@ dispatcher ((m, p, applet) : xs) = do
   if httpMethod /= m
     then dispatcher xs
     else do
-      let mparams = parse p httpPath
+      let mparams = parse p $ L.fromStrict (B.fromString httpPath)
       case mparams of
         Nothing -> dispatcher xs
         Just params ->
