@@ -10,6 +10,7 @@ module Data.Syntax (
   Name,
   Value,
   attr,
+  attrlist,
   tag,
   scTag,
 ) where
@@ -107,11 +108,16 @@ instance Show (Htmx Value) where
       ++ " />"
 -}
 
-attr :: Name -> Value -> Attr Value
+attr :: Name -> a -> Attr a
 attr = Attr
 
-tag :: TagName -> [(Name, Value)] -> [Htmx Value] -> Htmx Value
-tag tagName attrs children = Tag tagName (AttrList $ uncurry attr <$> attrs) (ChildList children)
+attrlist :: [(Name, a)] -> AttrList a
+attrlist attrs =
+  let items = uncurry Attr <$> attrs
+  in AttrList items
 
-scTag :: TagName -> [(Name, Value)] -> Htmx Value
-scTag tagName attrs = SCTag tagName (AttrList $ uncurry attr <$> attrs)
+tag :: TagName -> AttrList a -> [Htmx a] -> Htmx a
+tag tagName attrs children = Tag tagName attrs (ChildList children)
+
+scTag :: TagName -> AttrList a -> Htmx a
+scTag = SCTag

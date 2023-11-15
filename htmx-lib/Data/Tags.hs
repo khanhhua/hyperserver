@@ -5,9 +5,9 @@ module Data.Tags where
 import Data.Syntax
 
 html :: [Htmx Value] -> Htmx Value
-html = tag "html" []
+html = tag "html" (AttrList [])
 
-head = tag "head" []
+head = tag "head" (AttrList [])
 body = tag "body"
 title = tag "title"
 script attrs = tag "script" attrs []
@@ -21,9 +21,13 @@ h5 = tag "h5"
 h6 = tag "h6"
 
 div = tag "div"
+ul = tag "ul"
+li = tag "li"
 para = tag "p"
 anchor = tag "a"
 
 img = scTag "img"
+
+input = scTag "input"
 
 text = TextNode

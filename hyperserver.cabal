@@ -57,7 +57,7 @@ library htmx-monad
       , Data.Tags
       , Data.Builder
       , Template.Class
-      , Template.Elements
+      , Template.ElementX
     build-depends:
         http-server
     default-language: Haskell2010

@@ -1,9 +1,4 @@
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
-{-# HLINT ignore "Use <&>" #-}
 module Main where
-
-import Data.List (singleton)
 
 import Control.Class (Applet)
 import Control.HttpApplet (dispatcher, runApplet)
@@ -23,7 +18,7 @@ import qualified Data.Syntax as H
 import qualified Data.Tags as H
 import Parsers.FormDataParser (formData)
 import Parsers.Parser (parse)
-import qualified Template.Elements as T
+import qualified Template.ElementX as T
 
 main :: IO ()
 main = serve Nothing "8080" $ runApplet $ dispatcher routingTable
@@ -64,32 +59,34 @@ todoList = do
   tmplPage body =
     T.tag
       "html"
-      []
+      (T.sattributes [])
       [ T.stag
           "head"
-          []
-          [ H.tag "title" [] [H.text "Hyperserver"]
-          , H.script [("src", "https://unpkg.com/htmx.org@1.9.4/dist/htmx.min.js")]
-          , H.link [("href", "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css")]
+          (H.attrlist [])
+          [ H.tag "title" (H.attrlist []) [H.text "Hyperserver"]
+          , H.script (H.attrlist [("src", "https://unpkg.com/htmx.org@1.9.4/dist/htmx.min.js")])
+          , H.link (H.attrlist [("href", "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css")])
           ]
-      , T.tag "body" [] body
+      , T.tag "body" (T.sattributes []) body
       ]
   tmplForm items =
     T.stag
       "form"
-      [ ("hx-post", "/todos")
-      , ("hx-select", "form")
-      , ("hx-swap", "outerHTML")
-      , ("hx-trigger", "submit")
-      ]
-      [ H.tag "h1" [] [H.text "TODO - List"]
+      ( H.attrlist
+        [ ("hx-post", "/todos")
+        , ("hx-select", "form")
+        , ("hx-swap", "outerHTML")
+        , ("hx-trigger", "submit")
+        ]
+      )
+      [ H.tag "h1" (H.attrlist []) [H.text "TODO - List"]
       , H.tag
           "ul"
-          []
-          [H.tag "li" [] [H.tag "input" [("type", "text"), ("name", "todoItem"), ("value", item)] []] | item <- items]
-      , H.tag "input" [("type", "text"), ("name", "todoItem")] []
+          (H.attrlist [])
+          [H.tag "li" (H.attrlist []) [H.tag "input" (H.attrlist [("type", "text"), ("name", "todoItem"), ("value", item)]) []] | item <- items]
+      , H.tag "input" (H.attrlist [("type", "text"), ("name", "todoItem")]) []
       , H.scTag
           "input"
-          [ ("type", "submit")
-          ]
+          ( H.attrlist [ ("type", "submit") ]
+          )
       ]
