@@ -21,6 +21,8 @@ h5 = tag "h5"
 h6 = tag "h6"
 
 div = tag "div"
+
+form = tag "form"
 ul = tag "ul"
 li = tag "li"
 para = tag "p"
@@ -29,5 +31,7 @@ anchor = tag "a"
 img = scTag "img"
 
 input = scTag "input"
+
+label = tag "label"
 
 text = TextNode

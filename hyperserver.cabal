@@ -58,6 +58,7 @@ library htmx-monad
       , Data.Builder
       , Template.Class
       , Template.ElementX
+      , Components.ToDoComponent
     build-depends:
         http-server
     default-language: Haskell2010

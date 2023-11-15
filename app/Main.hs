@@ -3,7 +3,7 @@ module Main where
 import Control.Class (Applet)
 import Control.HttpApplet (dispatcher, runApplet)
 import Control.HttpConnection (serve)
-import Control.Monad.Trans.Reader (asks, runReader)
+import Control.Monad.Trans.Reader (asks, runReader, reader)
 import Data.Response (htmlText, plainText)
 import Data.Router (get, post)
 
@@ -19,6 +19,7 @@ import qualified Data.Tags as H
 import Parsers.FormDataParser (formData)
 import Parsers.Parser (parse)
 import qualified Template.ElementX as T
+import Components.ToDoComponent (todoComponent, ToDoModel (ToDoModel))
 
 main :: IO ()
 main = serve Nothing "8080" $ runApplet $ dispatcher routingTable
@@ -49,7 +50,7 @@ todoList = do
   let mform = parse formData mbody
       mtodoItems = getMulti "todoItem" <$> mform
       items = fromMaybe [] mtodoItems
-      html = runReader (tmplPage [tmplForm items]) []
+      html = runReader (tmplPage [tmplToDoComponent $ ToDoModel "" items]) []
       content = toStrict $ toLazyByteString (buildHtmx html)
   pure $ htmlText 200 content
  where
@@ -69,24 +70,5 @@ todoList = do
           ]
       , T.tag "body" (T.sattributes []) body
       ]
-  tmplForm items =
-    T.stag
-      "form"
-      ( H.attrlist
-        [ ("hx-post", "/todos")
-        , ("hx-select", "form")
-        , ("hx-swap", "outerHTML")
-        , ("hx-trigger", "submit")
-        ]
-      )
-      [ H.tag "h1" (H.attrlist []) [H.text "TODO - List"]
-      , H.tag
-          "ul"
-          (H.attrlist [])
-          [H.tag "li" (H.attrlist []) [H.tag "input" (H.attrlist [("type", "text"), ("name", "todoItem"), ("value", item)]) []] | item <- items]
-      , H.tag "input" (H.attrlist [("type", "text"), ("name", "todoItem")]) []
-      , H.scTag
-          "input"
-          ( H.attrlist [ ("type", "submit") ]
-          )
-      ]
+
+  tmplToDoComponent = pure . todoComponent
