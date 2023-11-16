@@ -1,12 +1,12 @@
 module Template.ElementX where
 
 import Control.Monad (liftM2)
-import Data.Maybe (fromMaybe)
 import Control.Monad.Trans.Reader (ask)
+import Data.Maybe (fromMaybe)
 
+import Data.Syntax (AttrList (AttrList), Html (TextNode))
 import qualified Data.Syntax as H
-import Template.Class (TemplateX, AttributesX)
-import Data.Syntax (AttrList(AttrList), Htmx (TextNode))
+import Template.Class (AttributesX, TemplateX)
 
 type TemplateXElement a = TemplateX [(String, a)] a
 type TemplateXAttributes a = AttributesX [(String, a)] a
@@ -18,7 +18,7 @@ tag tagName attrsX childrenX = do
   -- stag tagName attrs children
   liftM2 (H.tag tagName) attrsX (sequence childrenX)
 
-stag :: H.TagName -> AttrList a -> [H.Htmx a] -> TemplateXElement a
+stag :: H.TagName -> AttrList a -> [H.Html a] -> TemplateXElement a
 stag tagName attrs children =
   pure $ H.tag tagName attrs children
 

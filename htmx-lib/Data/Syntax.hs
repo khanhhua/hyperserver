@@ -2,7 +2,7 @@
 {-# LANGUAGE InstanceSigs #-}
 
 module Data.Syntax (
-  Htmx (..),
+  Html (..),
   AttrList (..),
   Attr (..),
   ChildList (..),
@@ -19,12 +19,12 @@ type TagName = String
 type Name = String
 type Value = String
 
-data Htmx a
+data Html a
   = Tag TagName (AttrList a) (ChildList a)
   | SCTag TagName (AttrList a)
   | TextNode a
 
-instance (Semigroup a) => Semigroup (Htmx a) where
+instance (Semigroup a) => Semigroup (Html a) where
   (<>) (TextNode a) (TextNode b) = TextNode (a <> b)
   (<>) (Tag tagName attrs (ChildList children)) node@(TextNode _) = Tag tagName attrs (ChildList $ children <> [node])
   (<>) (SCTag tagName (AttrList attrsA)) (SCTag _ (AttrList attrsB)) = SCTag tagName (AttrList $ attrsA <> attrsB)
@@ -40,12 +40,12 @@ instance (Semigroup a) => Semigroup (Htmx a) where
     consume (Tag name attrs (ChildList children)) consumedNode =
       Tag name attrs (ChildList $ children <> [consumedNode])
 
-instance Functor Htmx where
+instance Functor Html where
   fmap f (TextNode a) = TextNode (f a)
   fmap f (Tag tagName attrs children) = Tag tagName (f <$> attrs) (f <$> children)
   fmap f (SCTag tagName attrs) = SCTag tagName (f <$> attrs)
 
-instance Applicative Htmx where
+instance Applicative Html where
   pure = TextNode
 
   (<*>) (TextNode fx) (TextNode y) =
@@ -61,10 +61,10 @@ instance Applicative Htmx where
     newAttrs = fx <*> attrs
   (<*>) _ _ = error "Applicative not fully defined"
 
-instance (Monoid a) => Monoid (Htmx a) where
+instance (Monoid a) => Monoid (Html a) where
   mempty = TextNode mempty
 
--- instance Monad Htmx where
+-- instance Monad Html where
 --  return = pure
 --  (>>=)
 
@@ -75,7 +75,7 @@ instance Applicative Attr where
   pure = Attr "INVALID"
   (<*>) (Attr name fa) (Attr _ a) = Attr name (fa a)
 
-newtype ChildList a = ChildList [Htmx a]
+newtype ChildList a = ChildList [Html a]
   deriving (Functor)
 
 instance Applicative ChildList where
@@ -94,7 +94,7 @@ instance Applicative AttrList where
 instance Show Attr Value where
   show (Attr name value) = show name ++ "( " ++ show value ++ " )"
 
-instance Show (Htmx Value) where
+instance Show (Html Value) where
   show (TextNode t) = show t
   show (Tag name (AttrList []) []) = show $ "<" ++ name ++ " />"
   show (Tag name (AttrList attrs) children) =
@@ -114,10 +114,10 @@ attr = Attr
 attrlist :: [(Name, a)] -> AttrList a
 attrlist attrs =
   let items = uncurry Attr <$> attrs
-  in AttrList items
+   in AttrList items
 
-tag :: TagName -> AttrList a -> [Htmx a] -> Htmx a
+tag :: TagName -> AttrList a -> [Html a] -> Html a
 tag tagName attrs children = Tag tagName attrs (ChildList children)
 
-scTag :: TagName -> AttrList a -> Htmx a
+scTag :: TagName -> AttrList a -> Html a
 scTag = SCTag

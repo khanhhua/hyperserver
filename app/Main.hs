@@ -3,13 +3,14 @@ module Main where
 import Control.Class (Applet)
 import Control.HttpApplet (dispatcher, runApplet)
 import Control.HttpConnection (serve)
-import Control.Monad.Trans.Reader (asks, runReader, reader)
+import Control.Monad.Trans.Reader (asks, runReader)
 import Data.Response (htmlText, plainText)
 import Data.Router (get, post)
 
 import Parsers.UrlParser (root, s, top, var, (//))
 
-import Data.Builder (buildHtmx)
+import Components.ToDoComponent (ToDoModel (ToDoModel), todoComponent)
+import Data.Builder (buildHtml)
 import Data.ByteString.Builder (toLazyByteString)
 import Data.ByteString.Lazy (toStrict)
 import Data.Maybe (fromMaybe)
@@ -19,7 +20,6 @@ import qualified Data.Tags as H
 import Parsers.FormDataParser (formData)
 import Parsers.Parser (parse)
 import qualified Template.ElementX as T
-import Components.ToDoComponent (todoComponent, ToDoModel (ToDoModel))
 
 main :: IO ()
 main = serve Nothing "8080" $ runApplet $ dispatcher routingTable
@@ -51,7 +51,7 @@ todoList = do
       mtodoItems = getMulti "todoItem" <$> mform
       items = fromMaybe [] mtodoItems
       html = runReader (tmplPage [tmplToDoComponent $ ToDoModel "" items]) []
-      content = toStrict $ toLazyByteString (buildHtmx html)
+      content = toStrict $ toLazyByteString (buildHtml html)
   pure $ htmlText 200 content
  where
   getMulti key =

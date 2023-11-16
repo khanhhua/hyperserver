@@ -1,7 +1,7 @@
-module Data.Builder (buildHtmx) where
+module Data.Builder (buildHtml) where
 
 import Data.ByteString.Builder (Builder, string8)
-import Data.Syntax (Attr (Attr), AttrList (AttrList), ChildList (ChildList), Htmx (SCTag, Tag, TextNode), Value)
+import Data.Syntax (Attr (Attr), AttrList (AttrList), ChildList (ChildList), Html (SCTag, Tag, TextNode), Value)
 
 lt :: Builder
 lt = string8 "<"
@@ -15,9 +15,9 @@ gt = string8 ">"
 sep :: Builder
 sep = string8 " "
 
-buildHtmx :: Htmx Value -> Builder
-buildHtmx (TextNode t) = string8 t
-buildHtmx (SCTag tagName attrs) =
+buildHtml :: Html Value -> Builder
+buildHtml (TextNode t) = string8 t
+buildHtml (SCTag tagName attrs) =
   lt
     <> bTagName
     <> buildAttrs attrs
@@ -26,7 +26,7 @@ buildHtmx (SCTag tagName attrs) =
     <> gt
  where
   bTagName = string8 tagName
-buildHtmx (Tag tagName attrs (ChildList children)) =
+buildHtml (Tag tagName attrs (ChildList children)) =
   lt
     <> bTagName
     <> buildAttrs attrs
@@ -35,7 +35,7 @@ buildHtmx (Tag tagName attrs (ChildList children)) =
     <> (lt <> sl <> bTagName <> gt)
  where
   bTagName = string8 tagName
-  childTags = foldl (<>) mempty $ buildHtmx <$> children
+  childTags = foldl (<>) mempty $ buildHtml <$> children
 
 buildAttrs :: AttrList Value -> Builder
 buildAttrs (AttrList []) = mempty

@@ -4,7 +4,7 @@ module Data.Tags where
 
 import Data.Syntax
 
-html :: [Htmx Value] -> Htmx Value
+html :: [Html Value] -> Html Value
 html = tag "html" (AttrList [])
 
 head = tag "head" (AttrList [])
