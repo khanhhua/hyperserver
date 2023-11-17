@@ -1,15 +1,22 @@
-module Components.ToDoComponent (ToDoModel (..), Keyword, ToDo, todoComponent) where
+module Components.ToDoComponent (ToDoModel (..), Keyword, ToDo, TemplateXComponent, todoComponent) where
 
 import qualified Data.Syntax as H
 import qualified Data.Tags as H
+import Template.Class (TemplateX)
+import Control.Monad.Trans.Reader (ask)
 
 type Keyword = String
 type ToDo = String
 data ToDoModel = ToDoModel Keyword [ToDo]
 
-todoComponent :: ToDoModel -> H.Html H.Value
-todoComponent (ToDoModel keyword todos) =
-  H.form
+type TemplateXComponent = TemplateX ToDoModel H.Value
+
+-- todoComponent :: ToDoModel -> H.Html H.Value
+-- todoComponent (ToDoModel keyword todos) =
+todoComponent :: TemplateXComponent
+todoComponent = do
+  ToDoModel keyword todos <- ask
+  pure $ H.form
     ( H.attrlist
         [ ("hx-post", "/todos")
         , ("hx-select", "form")
