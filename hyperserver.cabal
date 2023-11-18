@@ -59,6 +59,7 @@ library htmx-monad
       , Template.Class
       , Template.ElementX
       , Components.ToDoComponent
+      , Components.QuickSearch
     build-depends:
         http-server
     default-language: Haskell2010
